@@ -2,7 +2,6 @@ class PyJWTError(Exception):
     """
     Base class for all exceptions
     """
-
     pass
 
 
@@ -47,10 +46,11 @@ class InvalidAlgorithmError(InvalidTokenError):
 
 
 class MissingRequiredClaimError(InvalidTokenError):
-    def __init__(self, claim: str) -> None:
+
+    def __init__(self, claim: str) ->None:
         self.claim = claim
 
-    def __str__(self) -> str:
+    def __str__(self) ->str:
         return f'Token is missing the "{self.claim}" claim'
 
 
