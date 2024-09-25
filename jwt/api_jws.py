@@ -30,20 +30,24 @@ class PyJWS:
         """
         Registers a new Algorithm for use when creating and verifying tokens.
         """
-        pass
+        self._algorithms[alg_id] = alg_obj
+        self._valid_algs.add(alg_id)
 
     def unregister_algorithm(self, alg_id: str) ->None:
         """
         Unregisters an Algorithm for use when creating and verifying tokens
         Throws KeyError if algorithm is not registered.
         """
-        pass
+        if alg_id not in self._algorithms:
+            raise KeyError(f"The algorithm '{alg_id}' is not registered.")
+        del self._algorithms[alg_id]
+        self._valid_algs.remove(alg_id)
 
     def get_algorithms(self) ->list[str]:
         """
         Returns a list of supported values for the 'alg' parameter.
         """
-        pass
+        return list(self._valid_algs)
 
     def get_algorithm_by_name(self, alg_name: str) ->Algorithm:
         """
@@ -53,7 +57,9 @@ class PyJWS:
 
         >>> jws_obj.get_algorithm_by_name("RS256")
         """
-        pass
+        if alg_name not in self._algorithms:
+            raise InvalidAlgorithmError(f"Algorithm '{alg_name}' could not be found")
+        return self._algorithms[alg_name]
 
     def get_unverified_header(self, jwt: (str | bytes)) ->dict[str, Any]:
         """Returns back the JWT header parameters as a dict()
@@ -61,7 +67,20 @@ class PyJWS:
         Note: The signature is not verified so the header parameters
         should not be fully trusted until signature verification is complete
         """
-        pass
+        if isinstance(jwt, str):
+            jwt = jwt.encode('utf-8')
+
+        try:
+            header_segment = jwt.split(b'.')[0]
+            header_data = base64url_decode(header_segment)
+            header = json.loads(header_data.decode('utf-8'))
+        except (ValueError, TypeError, binascii.Error) as e:
+            raise DecodeError(f"Invalid header padding: {str(e)}")
+
+        if not isinstance(header, dict):
+            raise DecodeError("Invalid header string: must be a json object")
+
+        return header
 
 
 _jws_global_obj = PyJWS()
