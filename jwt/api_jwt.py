@@ -29,7 +29,12 @@ class PyJWT:
         This method is intended to be overridden by subclasses that need to
         encode the payload in a different way, e.g. compress the payload.
         """
-        pass
+        json_payload = json.dumps(
+            payload,
+            separators=(',', ':'),
+            cls=json_encoder
+        ).encode('utf-8')
+        return json_payload
 
     def _decode_payload(self, decoded: dict[str, Any]) ->Any:
         """
@@ -39,7 +44,11 @@ class PyJWT:
         decode the payload in a different way, e.g. decompress compressed
         payloads.
         """
-        pass
+        try:
+            payload = json.loads(decoded['payload'])
+        except ValueError as e:
+            raise DecodeError('Invalid payload string: %s' % e)
+        return payload
 
 
 _jwt_global_obj = PyJWT()
